@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word Explainer AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button, input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    #response {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #updateSection {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Offline Word Explainer AI</h1>
+    <button id="voiceToggle">Voice: OFF</button>
+    <button id="updateToggle">Update Word</button>
+    <input type="text" id="userInput" placeholder="Ask about a word..." />
+    <button onclick="askAI()">Ask AI</button>
+    <div id="response"></div>
+
+    <div id="updateSection">
+      <h3>Update or Add a Word</h3>
+      <input type="text" id="updateWord" placeholder="Word..." />
+      <input type="text" id="updateDefinition" placeholder="Definition..." />
+      <button onclick="updateDefinition()">Save</button>
+      <p id="updateConfirm"></p>
+    </div>
+  </div>
+
+  <script>
+    const defaultDictionary = {
+      "space": "A continuous area that is free or unoccupied.",
+      "time": "The indefinite progress of existence and events.",
+      "gravity": "The force that pulls objects toward each other."
+    };
+
+    let dictionary = {};
+
+    function loadDictionary() {
+      const stored = localStorage.getItem("wordDictionary");
+      dictionary = stored ? JSON.parse(stored) : { ...defaultDictionary };
+    }
+
+    function saveDictionary() {
+      localStorage.setItem("wordDictionary", JSON.stringify(dictionary));
+    }
+
+    let voiceOn = false;
+
+    document.getElementById("voiceToggle").addEventListener("click", () => {
+      voiceOn = !voiceOn;
+      document.getElementById("voiceToggle").innerText = `Voice: ${voiceOn ? "ON" : "OFF"}`;
+    });
+
+    document.getElementById("updateToggle").addEventListener("click", () => {
+      const updateSec = document.getElementById("updateSection");
+      updateSec.style.display = updateSec.style.display === "none" ? "block" : "none";
+    });
+
+    function askAI() {
+      const input = document.getElementById("userInput").value.toLowerCase().trim();
+      let response;
+      if (dictionary[input]) {
+        response = dictionary[input];
+      } else {
+        response = `I don't know what "${input}" means yet. Can you tell me?`;
+      }
+      document.getElementById("response").innerText = response;
+      if (voiceOn) {
+        const utterance = new SpeechSynthesisUtterance(response);
+        speechSynthesis.speak(utterance);
+      }
+    }
+
+    function updateDefinition() {
+      const word = document.getElementById("updateWord").value.toLowerCase().trim();
+      const definition = document.getElementById("updateDefinition").value.trim();
+      if (word && definition) {
+        dictionary[word] = definition;
+        saveDictionary();
+        document.getElementById("updateConfirm").innerText = `Word "${word}" updated!`;
+        document.getElementById("updateWord").value = "";
+        document.getElementById("updateDefinition").value = "";
+      } else {
+        document.getElementById("updateConfirm").innerText = "Please enter both fields.";
+      }
+    }
+
+    loadDictionary();
+  </script>
+</body>
+</html>
